@@ -14,7 +14,7 @@ from sklearn.model_selection import train_test_split
 # Creating test-passengers bellow in order to predict the survival rate :
     
 ''' # The Code Goes Like : Test-Passenger = {'Passenger Class': 1/2/3,
-                                             'Age': 1 to 100,
+                                             'Age': any natural number,
                                              'Sex': 0/1 i.e Female/Male} # '''
                                              
 #### Create Test-Passengers Bellow:
