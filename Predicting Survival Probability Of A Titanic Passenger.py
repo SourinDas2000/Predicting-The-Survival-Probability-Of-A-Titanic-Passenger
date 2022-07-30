@@ -7,8 +7,9 @@ import numpy as np
 import pandas as pd
 from prettytable import PrettyTable
 from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import ShuffleSplit
+from sklearn.model_selection import cross_val_score
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split
 
 
 # Creating test-passengers bellow in order to predict the survival rate :
@@ -61,27 +62,23 @@ x = data[['Pclass', 'Age', 'male']].values
 y = data['Survived'].values
 
 
-# Creating a test-train split in order to get the accuracy score of the model:
-    
-x_train, x_test, y_train, y_test = train_test_split(x,y,test_size= 0.2)
-
-
 # Using grid-search cv to get the best parameter:
-     
-grid_search_cv = GridSearchCV(RandomForestClassifier(), {'n_estimators': np.arange(20,60,10)}, cv= 5)
+
+cv = ShuffleSplit(n_splits= 5, test_size= 0.3, random_state= 2)     
+grid_search_cv = GridSearchCV(RandomForestClassifier(), {'n_estimators': np.arange(50,80,10)}, cv= cv)
 grid_search_cv.fit(x,y)
 
 
 # Creating a model:
     
 model = RandomForestClassifier(n_estimators= grid_search_cv.best_params_['n_estimators'])
-model.fit(x, y)
+model.fit(x,y)
 
 
 # Creating another model in order to get the accuracy score:
     
 model_for_score = RandomForestClassifier(n_estimators= grid_search_cv.best_params_['n_estimators'])
-model_for_score.fit(x_train, y_train)
+scores = cross_val_score(model_for_score, x,y, cv= 5)
 
 
 # Getting the informations of the test_passengers and creating a list with the values:
@@ -121,16 +118,21 @@ myTable = PrettyTable()
 
 #### Creating Columns For The Table:
     
-columns = ['Passenger I.D', 'P-Class', 'Age', 'Sex', 'Probability Of Death (%)', 
-           'Probability Of Survival (%)', 'Prediction']
+columns = ['Passenger I.D', 'P-Class', 'Age', 'Sex', 
+           'Probability Of Death (%)', 
+           'Probability Of Survival (%)', 
+           'Prediction']
 
 #### Adding The Columns To The Table:
+    
 #... Adding The Sl.no/Passenger I.D ...#
 myTable.add_column(columns[0], np.arange(1,7))
 #... Adding The P-Class Of All The Test-Passengers ...#
-myTable.add_column(columns[1], [first[0], second[0], third[0], fourth[0], fifth[0], sixth[0]])
+myTable.add_column(columns[1], [first[0], second[0], third[0], 
+                                fourth[0], fifth[0], sixth[0]])
 #... Adding The Age Of All The Test-Passengers ...#
-myTable.add_column(columns[2], [first[1], second[1], third[1], fourth[1], fifth[1], sixth[1]])
+myTable.add_column(columns[2], [first[1], second[1], third[1], 
+                                fourth[1], fifth[1], sixth[1]])
 #... Converting The Gender Values From 0/1 to Female/Male For All The Test-Passengers & Adding It To The Table ...#
 myTable.add_column(columns[3], ['Male' if i == 1 else 'Female' for i in sex])
 #... Adding The Probability Of Death Of All The Test-Passenger ...# 
@@ -159,15 +161,19 @@ title = fontstyle.apply('Predicting The Probability Of Survival Of A Test-Passen
 # Getting the n-estimator used in the model and the accuracy score:
      
 n_estimator = grid_search_cv.best_params_['n_estimators']
-model_accuracy = round(model_for_score.score(x_test,y_test)*100,2)
+model_accuracy = round(scores.mean()*100,2)
 
 
 # Printing everything:
-    
-print(title)
-print(fontstyle.apply('\n' + 'N-Estimatior Used: ', 'yellow') + str(n_estimator))
+
+#... The Title ...# 
+print('\n' + title)
+#... Printing The 'No. Of Esitimators' used ...#
+print(fontstyle.apply('\n' + 'No. Of Estimators: ', 'yellow') + str(n_estimator))
+#... Printing The Model Acuracy In Percentage ...#
 print(fontstyle.apply('Model Accuracy: ', 'yellow') + str(model_accuracy) + '%')
-print('\n' + 'Table:')
+#... Printing The Output Table ...#
+print('\n' + fontstyle.apply('Table:', 'red'))
 print(myTable)
 
 
